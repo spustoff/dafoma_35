@@ -286,4 +286,22 @@ class DataService: ObservableObject {
         
         return streak
     }
+    
+    // MARK: - Reset Data
+    
+    func resetAllData() {
+        // Reset all published properties
+        user = nil
+        availableQuests = Quest.sampleQuests
+        activeQuests = []
+        completedQuests = []
+        challenges = Challenge.sampleChallenges
+        progressStats = ProgressStats()
+        
+        // Clear all UserDefaults
+        userDefaults.removeObject(forKey: userKey)
+        userDefaults.removeObject(forKey: questsKey)
+        userDefaults.removeObject(forKey: challengesKey)
+        userDefaults.removeObject(forKey: progressKey)
+    }
 }

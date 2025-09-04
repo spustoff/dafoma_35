@@ -13,7 +13,7 @@ struct ContentView: View {
     var body: some View {
         Group {
             if isOnboardingComplete {
-                SimpleMainView()
+                SimpleMainView(isOnboardingComplete: $isOnboardingComplete)
                     .environmentObject(DataService.shared)
             } else {
                 SimpleOnboardingView(isComplete: $isOnboardingComplete)

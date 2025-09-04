@@ -10,10 +10,15 @@ import SwiftUI
 struct SimpleMainView: View {
     @StateObject private var dataService = DataService.shared
     @State private var selectedTab = 0
+    @Binding var isOnboardingComplete: Bool
+    
+    init(isOnboardingComplete: Binding<Bool>) {
+        self._isOnboardingComplete = isOnboardingComplete
+    }
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            SimpleHomeView()
+            SimpleHomeView(isOnboardingComplete: $isOnboardingComplete)
                 .tabItem {
                     Image(systemName: "house.fill")
                     Text("Home")
@@ -40,6 +45,13 @@ struct SimpleMainView: View {
                     Text("Progress")
                 }
                 .tag(3)
+            
+            SimpleSettingsView(isOnboardingComplete: $isOnboardingComplete)
+                .tabItem {
+                    Image(systemName: "gear")
+                    Text("Settings")
+                }
+                .tag(4)
         }
         .accentColor(Color.appPrimary)
     }
@@ -47,6 +59,8 @@ struct SimpleMainView: View {
 
 struct SimpleHomeView: View {
     @EnvironmentObject var dataService: DataService
+    @State private var showingSettings = false
+    @Binding var isOnboardingComplete: Bool
     
     var body: some View {
         NavigationView {
@@ -57,14 +71,25 @@ struct SimpleHomeView: View {
                     VStack(spacing: 20) {
                         // Header
                         VStack(spacing: 15) {
-                            Text("DayQuest Pin")
-                                .font(.largeTitle.weight(.bold))
-                                .foregroundColor(.textPrimary)
-                            
-                            Text("Transform your day with meaningful quests")
-                                .font(.subheadline)
-                                .foregroundColor(.textSecondary)
-                                .multilineTextAlignment(.center)
+                            HStack {
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text("DayQuest Pin")
+                                        .font(.largeTitle.weight(.bold))
+                                        .foregroundColor(.textPrimary)
+                                    
+                                    Text("Transform your day with meaningful quests")
+                                        .font(.subheadline)
+                                        .foregroundColor(.textSecondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Button(action: { showingSettings = true }) {
+                                    Image(systemName: "gear")
+                                        .font(.title2)
+                                        .foregroundColor(.appPrimary)
+                                }
+                            }
                         }
                         .padding(.top, 20)
                         
@@ -128,6 +153,9 @@ struct SimpleHomeView: View {
                 }
             }
             .navigationBarHidden(true)
+        }
+        .sheet(isPresented: $showingSettings) {
+            SimpleSettingsView(isOnboardingComplete: $isOnboardingComplete)
         }
     }
 }
@@ -660,6 +688,6 @@ struct SimpleProgressBar: View {
 }
 
 #Preview {
-    SimpleMainView()
+    SimpleMainView(isOnboardingComplete: .constant(true))
         .environmentObject(DataService.shared)
 }

@@ -13,6 +13,19 @@ struct SimpleOnboardingView: View {
     @State private var name = ""
     @State private var email = ""
     
+    private var isNextButtonEnabled: Bool {
+        switch currentPage {
+        case 0, 2: // Welcome and completion pages - always enabled
+            return true
+        case 1: // Info page - require name and email
+            return !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && 
+                   !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                   email.contains("@") && email.contains(".")
+        default:
+            return true
+        }
+    }
+    
     var body: some View {
         ZStack {
             Color.appBackground.ignoresSafeArea()
@@ -44,9 +57,10 @@ struct SimpleOnboardingView: View {
                             .font(.headline.weight(.bold))
                             .foregroundColor(.white)
                             .frame(width: 120, height: 44)
-                            .background(Color.appPrimary)
+                            .background(isNextButtonEnabled ? Color.appPrimary : Color.gray)
                             .cornerRadius(22)
                     }
+                    .disabled(!isNextButtonEnabled)
                 }
                 .padding(.horizontal, 30)
                 .padding(.bottom, 50)
@@ -102,6 +116,10 @@ struct SimpleOnboardingView: View {
                         .background(Color.cardBackground)
                         .cornerRadius(10)
                         .foregroundColor(.textPrimary)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !name.isEmpty ? Color.red : Color.clear, lineWidth: 1)
+                        )
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
@@ -116,6 +134,24 @@ struct SimpleOnboardingView: View {
                         .foregroundColor(.textPrimary)
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke((!email.contains("@") || !email.contains(".")) && !email.isEmpty ? Color.red : Color.clear, lineWidth: 1)
+                        )
+                    
+                    if !email.isEmpty && (!email.contains("@") || !email.contains(".")) {
+                        Text("Please enter a valid email address")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                }
+                
+                if currentPage == 1 && (!isNextButtonEnabled) {
+                    Text("Please fill in all required fields to continue")
+                        .font(.caption)
+                        .foregroundColor(.appSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 10)
                 }
             }
             .padding(.horizontal, 30)
@@ -178,15 +214,23 @@ struct SimpleOnboardingView: View {
     }
     
     private func completeOnboarding() {
-        guard !name.isEmpty && !email.isEmpty else { return }
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        guard !trimmedName.isEmpty && 
+              !trimmedEmail.isEmpty && 
+              trimmedEmail.contains("@") && 
+              trimmedEmail.contains(".") else { 
+            return 
+        }
         
         // Save user info
-        UserDefaults.standard.set(name, forKey: "user_name")
-        UserDefaults.standard.set(email, forKey: "user_email")
+        UserDefaults.standard.set(trimmedName, forKey: "user_name")
+        UserDefaults.standard.set(trimmedEmail, forKey: "user_email")
         UserDefaults.standard.set(true, forKey: "onboarding_complete")
         
         // Create user in data service
-        DataService.shared.createUser(name: name, email: email)
+        DataService.shared.createUser(name: trimmedName, email: trimmedEmail)
         
         isComplete = true
     }
