@@ -624,10 +624,6 @@ struct SimpleMindfulButton: View {
             }
             
             Spacer()
-            
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.textSecondary)
         }
         .padding()
         .background(Color.cardBackground)
